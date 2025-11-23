@@ -1,7 +1,8 @@
-import pygame
-import random
 import math
+import random
 import sys
+
+import pygame
 
 # ==========================
 # Konfigurasi Utama
@@ -68,12 +69,15 @@ MAZE_LAYOUT = [
 
 # Validasi ukuran maze
 if len(MAZE_LAYOUT) != GRID_ROWS or any(len(row) != GRID_COLS for row in MAZE_LAYOUT):
-    print("Maze layout size mismatch. Expected 40x30 grid of characters for 800x600 with TILE_SIZE=20.")
+    print(
+        "Maze layout size mismatch. Expected 40x30 grid of characters for 800x600 with TILE_SIZE=20."
+    )
     sys.exit(1)
 
 # ==========================
 # Utilitas Grid
 # ==========================
+
 
 def grid_to_pixel(col, row):
     return col * TILE_SIZE, row * TILE_SIZE
@@ -85,25 +89,26 @@ def pixel_to_grid(x, y):
 
 def is_wall(col, row):
     if 0 <= row < GRID_ROWS and 0 <= col < GRID_COLS:
-        return MAZE_LAYOUT[row][col] == '1'
+        return MAZE_LAYOUT[row][col] == "1"
     return True
 
 
 def is_path(col, row):
     if 0 <= row < GRID_ROWS and 0 <= col < GRID_COLS:
-        return MAZE_LAYOUT[row][col] in ('0', '2', '3')
+        return MAZE_LAYOUT[row][col] in ("0", "2", "3")
     return False
 
 
 def is_intersection(col, row):
     # Persimpangan jika lebih dari 2 arah valid
-    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
     count = 0
     for dx, dy in dirs:
         nc, nr = col + dx, row + dy
         if is_path(nc, nr):
             count += 1
     return count >= 3
+
 
 # ==========================
 # Game Entities
@@ -150,7 +155,8 @@ class Pacman:
         new_x = self.x + dx * self.speed
         new_y = self.y + dy * self.speed
         # Cegah nembus dinding: clamp saat akan masuk dinding
-        self.x, self.y = self._move_with_collision(self.x, self.y, new_x, new_y, dx, dy)
+        self.x, self.y = self._move_with_collision(
+            self.x, self.y, new_x, new_y, dx, dy)
         self.col, self.row = pixel_to_grid(self.x, self.y)
 
     def _move_with_collision(self, old_x, old_y, new_x, new_y, dx, dy):
@@ -214,7 +220,7 @@ class Ghost:
     def valid_dirs(self):
         col, row = pixel_to_grid(self.x, self.y)
         options = []
-        for dx, dy in [(1,0),(-1,0),(0,1),(0,-1)]:
+        for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
             nc, nr = col + dx, row + dy
             if is_path(nc, nr):
                 options.append((dx, dy))
@@ -253,7 +259,8 @@ class Ghost:
         new_x = self.x + dx * self.speed
         new_y = self.y + dy * self.speed
         # Collision dengan dinding
-        self.x, self.y = self._move_with_collision(self.x, self.y, new_x, new_y, dx, dy)
+        self.x, self.y = self._move_with_collision(
+            self.x, self.y, new_x, new_y, dx, dy)
         self.col, self.row = pixel_to_grid(self.x, self.y)
 
     def _move_with_collision(self, old_x, old_y, new_x, new_y, dx, dy):
@@ -285,8 +292,10 @@ class Ghost:
         pygame.draw.circle(surface, self.color, (cx, cy), self.radius)
         # mata sederhana
         eye_offset = 4
-        pygame.draw.circle(surface, WHITE, (cx - eye_offset, cy - eye_offset), 3)
-        pygame.draw.circle(surface, WHITE, (cx + eye_offset, cy - eye_offset), 3)
+        pygame.draw.circle(
+            surface, WHITE, (cx - eye_offset, cy - eye_offset), 3)
+        pygame.draw.circle(
+            surface, WHITE, (cx + eye_offset, cy - eye_offset), 3)
 
 
 # ==========================
@@ -306,9 +315,9 @@ class Game:
         self.power_pellets = set()
         for r, row in enumerate(MAZE_LAYOUT):
             for c, ch in enumerate(row):
-                if ch == '2':
+                if ch == "2":
                     self.dots.add((c, r))
-                elif ch == '3':
+                elif ch == "3":
                     self.power_pellets.add((c, r))
         self.total_dots = len(self.dots) + len(self.power_pellets)
 
@@ -337,7 +346,8 @@ class Game:
             gc, gr = self.ghost_starts[i]
             if not is_path(gc, gr):
                 gc, gr = self._find_nearest_path(gc, gr)
-            self.ghosts.append(Ghost(f"G{i+1}", colors[i], gc, gr, speed=speeds[i]))
+            self.ghosts.append(
+                Ghost(f"G{i + 1}", colors[i], gc, gr, speed=speeds[i]))
 
         self.score = 0
         self.lives = 3
@@ -349,6 +359,7 @@ class Game:
     def _find_nearest_path(self, c, r):
         # BFS kecil untuk cari path terdekat
         from collections import deque
+
         q = deque()
         q.append((c, r))
         seen = set([(c, r)])
@@ -356,7 +367,7 @@ class Game:
             cc, rr = q.popleft()
             if is_path(cc, rr):
                 return (cc, rr)
-            for dx, dy in [(1,0),(-1,0),(0,1),(0,-1)]:
+            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
                 nc, nr = cc + dx, rr + dy
                 if 0 <= nc < GRID_COLS and 0 <= nr < GRID_ROWS and (nc, nr) not in seen:
                     seen.add((nc, nr))
@@ -452,22 +463,27 @@ class Game:
         for r, row in enumerate(MAZE_LAYOUT):
             for c, ch in enumerate(row):
                 x, y = grid_to_pixel(c, r)
-                if ch == '1':
-                    pygame.draw.rect(surface, NAVY, (x, y, TILE_SIZE, TILE_SIZE))
-                    pygame.draw.rect(surface, BLUE, (x+2, y+2, TILE_SIZE-4, TILE_SIZE-4), 2)
+                if ch == "1":
+                    pygame.draw.rect(
+                        surface, NAVY, (x, y, TILE_SIZE, TILE_SIZE))
+                    pygame.draw.rect(
+                        surface, BLUE, (x + 2, y + 2,
+                                        TILE_SIZE - 4, TILE_SIZE - 4), 2
+                    )
                 else:
                     # jalur
-                    pygame.draw.rect(surface, BLACK, (x, y, TILE_SIZE, TILE_SIZE))
+                    pygame.draw.rect(
+                        surface, BLACK, (x, y, TILE_SIZE, TILE_SIZE))
                 # dots dan power akan digambar terpisah
 
         # Dots
-        for (c, r) in self.dots:
+        for c, r in self.dots:
             x, y = grid_to_pixel(c, r)
             cx = x + TILE_SIZE // 2
             cy = y + TILE_SIZE // 2
             pygame.draw.circle(surface, WHITE, (cx, cy), 3)
         # Power pellets
-        for (c, r) in self.power_pellets:
+        for c, r in self.power_pellets:
             x, y = grid_to_pixel(c, r)
             cx = x + TILE_SIZE // 2
             cy = y + TILE_SIZE // 2
@@ -483,9 +499,12 @@ class Game:
         if self.game_over:
             message = "YOU WIN!" if self.win else "GAME OVER"
             txt = self.bigfont.render(message, True, WHITE)
-            hint = self.font.render("Press R to Restart or ESC to Quit", True, WHITE)
-            surface.blit(txt, (WIDTH//2 - txt.get_width()//2, HEIGHT//2 - 40))
-            surface.blit(hint, (WIDTH//2 - hint.get_width()//2, HEIGHT//2 + 10))
+            hint = self.font.render(
+                "Press R to Restart or ESC to Quit", True, WHITE)
+            surface.blit(
+                txt, (WIDTH // 2 - txt.get_width() // 2, HEIGHT // 2 - 40))
+            surface.blit(
+                hint, (WIDTH // 2 - hint.get_width() // 2, HEIGHT // 2 + 10))
 
     def run(self):
         running = True
